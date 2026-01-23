@@ -32,27 +32,36 @@ ext {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
-	implementation 'org.springframework.modulith:spring-modulith-starter-core'
-	implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
-  implementation 'org.jmolecules:jmolecules-ddd'
-  implementation 'org.jmolecules:jmolecules-events'
-  implementation 'org.mapstruct:mapstruct'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
-  annotationProcessor 'org.projectlombok:lombok-mapstruct-binding'
-  annotationProcessor 'org.mapstruct:mapstruct-processor'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
-  testImplementation 'com.tngtech.archunit:archunit-junit5'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Spring Boot & Modulith
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
+
+    // jMolecules
+    implementation(platform("org.jmolecules:jmolecules-bom:2025.0.2"))
+    implementation 'org.jmolecules:jmolecules-ddd'
+    implementation 'org.jmolecules:jmolecules-cqrs-architecture'
+
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+    // Lombok (A ordem aqui importa!)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // Dev & Test
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
 
 dependencyManagement {
 	imports {
