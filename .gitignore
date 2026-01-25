@@ -30,6 +30,7 @@ temp/
 # --- Sistema e OS ---
 .DS_Store
 Thumbs.db
+.env
 
 # --- Spring Boot & MapStruct ---
 out/
