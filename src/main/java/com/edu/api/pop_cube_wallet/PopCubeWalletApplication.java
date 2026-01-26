@@ -1,12 +1,12 @@
-package com.edu.marble_and_arch;
+package com.edu.pop_cube_wallet;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MarbleAndArchApplication {
+public class PopCubeWalletApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(MarbleAndArchApplication.class, args);
+    SpringApplication.run(PopCubeWalletApplication.class, args);
   }
 }

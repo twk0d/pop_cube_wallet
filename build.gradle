@@ -8,7 +8,7 @@ plugins {
 
 group = 'com.edu'
 version = '0.0.1-SNAPSHOT'
-description = 'Educational Project to implement a DDD Modular Monolith'
+description = 'Pop Cube Wallet - DDD Modular Monolith'
 
 java {
 	toolchain {
