@@ -1,7 +1,7 @@
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'com.edu.marble-and-arch' is invalid and this project uses 'com.edu.marble_and_arch' instead.
+* The original package name 'com.edu.pop-cube-wallet' is invalid and this project uses 'com.edu.pop_cube_wallet' instead.
 
 # Getting Started
 
@@ -52,7 +52,7 @@ $ ./gradlew bootBuildImage
 Then, you can run the app like any other container:
 
 ```
-$ docker run --rm -p 8080:8080 marble-and-arch:0.0.1-SNAPSHOT
+$ docker run --rm -p 8080:8080 pop-cube-wallet:0.0.1-SNAPSHOT
 ```
 
 ### Executable with Native Build Tools
@@ -69,7 +69,7 @@ $ ./gradlew nativeCompile
 
 Then, you can run the app as follows:
 ```
-$ build/native/nativeCompile/marble-and-arch
+$ build/native/nativeCompile/pop-cube-wallet
 ```
 
 You can also run your existing tests suite in a native image.
