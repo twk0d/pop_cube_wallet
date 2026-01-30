@@ -1,6 +1,7 @@
 # --- Gradle ---
 .gradle/
 build/
+build*
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/resources/gradle.properties
 
@@ -37,3 +38,9 @@ out/
 bin/
 .apt_generated/
 .sts4-cache/
+
+# --- Arquivos e pastas específicas do projeto ---
+flyway-debug.txt
+flyway-test.txt
+modularity-debug.txt
+modularity-info.txt
