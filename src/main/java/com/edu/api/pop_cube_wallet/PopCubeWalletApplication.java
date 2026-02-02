@@ -1,4 +1,4 @@
-package com.edu.pop_cube_wallet;
+package com.edu.api.pop_cube_wallet;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
