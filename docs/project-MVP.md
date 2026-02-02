@@ -1,5 +1,34 @@
 # 🎯 MVP Scope: Digital Wallet API
 
+## MVP Phases
+
+### **Phase 1 - Core MVP (Must Have)** ✅ PRIORITY 1
+These features are essential and must be implemented for MVP release:
+
+* **Account Module:** User onboarding, CPF validation, profile query
+* **Wallet Module:** Balance query, internal credit/debit via ledger
+* **Transaction Module:** Basic P2P transfer with balance validation and atomicity
+* **Transaction Statement:** Historical movements list
+* **Notification Module:** Transfer alerts via asynchronous events
+
+### **Phase 2 - Advanced Features (Should Have)** ⚠️ PRIORITY 2
+These features enhance robustness and should be implemented after Phase 1:
+
+* **Account State Management:** ACTIVE, BLOCKED, PENDING_KYC states
+* **Daily Transfer Limits:** Policy enforcement per account
+* **Statement Projection (CQRS):** Denormalized read model fed by events
+* **Audit Module:** Immutable audit trail with event sourcing
+* **Idempotency Keys:** Deduplication for transfer requests
+
+### **Phase 3 - Learning Scenarios (Could Have)** 🔄 PRIORITY 3
+Advanced features for future iterations and architectural learning:
+
+* **Pockets/Sub-accounts (Caixinhas):** Support for multiple wallets per account
+* **Compensating Transactions (Estorno):** Reverse movements on downstream failures
+* **Account Temporary Lock:** BLOCKED state forbidding debits
+
+---
+
 ## Functional Requirements
 
 ### **Account Module (The Identity)**
@@ -39,7 +68,7 @@
 
 ---
 
-## Technical Requirements (Learning Goals)
+## Technical Requirements (Project Goals)
 
 | Feature | Implementation Detail |
 | :--- | :--- |
@@ -61,6 +90,104 @@
 * **Observabilidade:** Logs estruturados e correlação por trace/span id para cada transação; trilha completa da transferência e do evento de notificação.
 * **Desempenho alvo:** P99 de requisições de transferência ≤ 300ms em ambiente de referência; consultas de saldo ≤ 100ms.
 
+## Observability & Monitoring
+
+### Metrics (Micrometer/Prometheus)
+* **Transaction Metrics:**
+  - `wallet.transaction.success.count` - Total successful P2P transfers
+  - `wallet.transaction.failure.count` - Total failed transfers
+  - `wallet.transaction.duration` - P2P transfer latency (p50, p95, p99)
+  - `wallet.transfer.amount.sum` - Total amount transferred
+  
+* **Account Metrics:**
+  - `wallet.account.creation.count` - Total accounts created
+  - `wallet.account.state.gauge` - Current account states (ACTIVE, BLOCKED, PENDING_KYC)
+  
+* **Wallet Metrics:**
+  - `wallet.balance.query.duration` - Balance query latency
+  - `wallet.ledger.entries.count` - Total ledger entries
+
+### Health Checks
+* **`/actuator/health`** - Overall application health
+* **`/actuator/health/db`** - PostgreSQL connection status
+* **`/actuator/health/modulith`** - Spring Modulith module dependencies verification
+* **`/actuator/health/readiness`** - Application readiness (all modules loaded)
+
+### Structured Logging
+* **Format:** JSON (Logstash-compatible)
+* **Required Fields per Log Entry:**
+  - `timestamp` - ISO 8601 format
+  - `level` - INFO, WARN, ERROR, DEBUG
+  - `traceId` - Distributed trace identifier
+  - `spanId` - Distributed span identifier
+  - `userId` - Account/User ID performing the operation
+  - `operation` - Operation name (e.g., "P2P_TRANSFER", "ACCOUNT_CREATION")
+  - `module` - Module name (account, transaction, notification, etc.)
+  - `status` - Operation result (SUCCESS, FAILURE, PENDING)
+  - `duration_ms` - Operation execution time in milliseconds
+  - `message` - Human-readable log message
+
+* **Example Log Entry (JSON):**
+```json
+{
+  "timestamp": "2026-02-02T10:30:45.123Z",
+  "level": "INFO",
+  "traceId": "550e8400-e29b-41d4-a716-446655440000",
+  "spanId": "f5d3c5a1b9e2",
+  "userId": "account-uuid-123",
+  "operation": "P2P_TRANSFER",
+  "module": "transaction",
+  "status": "SUCCESS",
+  "duration_ms": 245,
+  "sourceAccountId": "account-uuid-123",
+  "destinationAccountId": "account-uuid-456",
+  "amount": 100.00,
+  "message": "P2P transfer completed successfully"
+}
+```
+
+* **Log Levels Strategy:**
+  - **DEBUG:** Detailed operation steps, variable states, flow control
+  - **INFO:** Operation completion, state transitions, business events
+  - **WARN:** Retries, fallbacks, degraded operation modes
+  - **ERROR:** Transaction failures, data inconsistencies, module health issues
+
+### Observability Stack
+* **Metrics:** Micrometer + Spring Boot Actuator
+* **Logging:** Logback + Logstash layout (JSON)
+* **Tracing:** Spring Cloud Sleuth (for traceId/spanId propagation)
+* **Monitoring:** Prometheus (metrics scraping) + Grafana (dashboards)
+* **Log Aggregation:** ELK Stack or Loki (for production)
+
+### Observability in Definition of Done
+* All async operations (notifications, event handlers) must propagate traceId/spanId
+* Critical paths (P2P transfer, account creation) must emit timing metrics
+* All module boundaries must have corresponding health checks
+* Error scenarios must include context-rich error logs with traceId for correlation
+
+## Technical Risks & Mitigation
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| **Event Publication Registry failure** | Lost notifications; eventual consistency broken | Implement retry mechanism with exponential backoff; maintain Dead Letter Queue for failed events; add monitoring/alerting on publication failures |
+| **Race condition on concurrent transfers** | Balance inconsistency; double spending | Use Optimistic Locking on Wallet aggregate with `@Version`; implement transaction isolation level REPEATABLE_READ; add idempotency key deduplication |
+| **Database schema per module complexity** | Migration difficulties; version conflicts | Use Flyway with module-specific migration paths (e.g., `classpath:db/migration/account/`, `classpath:db/migration/transaction/`); enforce naming conventions |
+| **GraalVM native image issues** | Reflection errors at runtime; serialization failures | Document required reflection configs in `reflection-config.json`; test native compilation in CI/CD pipeline; use GraalVM agent during development |
+| **Module dependency cycles** | Architectural violation; tight coupling | Run `ApplicationModules.of(Application.class).verify()` in every build; enforce DIP strictly; use domain events for cross-module communication |
+| **Event handler ordering dependency** | Inconsistent read models; projection lag | Implement idempotent event handlers; use event versioning; store event sequence number in projections; implement eventual consistency guarantees |
+| **Concurrent pocket/sub-account access** | Pocket balance mismatch | Lock wallet during pocket operations; implement pessimistic locking on pocket transfers; test high-contention scenarios |
+| **Large transaction volumes overwhelming ledger** | Query performance degradation | Implement ledger partitioning by date; create indexes on `accountId`, `timestamp`; use read replicas for statement queries; consider archival strategy |
+| **Spring Modulith test verification complexity** | False positives; missed violations | Document module boundaries clearly; use automated diagram generation; run modular tests in isolation before full integration |
+| **Logstash JSON serialization overhead** | Increased latency on high-throughput ops | Use async logging with appender buffer; benchmark JSON serialization cost; consider sampling strategy for DEBUG logs in production |
+
+## Technical Debt & Future Considerations
+
+* **Payment Gateway Integration:** Currently mocked; real integration requires PCI compliance and additional security measures
+* **Distributed Tracing:** Spring Cloud Sleuth suitable for monolith; review when transitioning to microservices
+* **Event Store:** Consider event sourcing library (Axon Framework) for more advanced saga patterns
+* **Cache Layer:** Add Redis for balance caching and reduce database load on high-traffic scenarios
+* **Rate Limiting:** Implement via API Gateway or Spring Cloud Gateway; define per-user and per-endpoint limits
+
 ## Out of Scope
 * Real Payment Gateway integration.
 * Frontend/UI (API only).
@@ -76,3 +203,6 @@
 5.  BLOCKED accounts reject debits but accept credits; daily transfer limit policy enforced.
 6.  Pockets/caixinhas are respected in balance calculations and protected from unauthorized debits.
 7.  Compensating transaction flow issues an estorno when downstream steps fail.
+8.  All technical risks have documented mitigation strategies and are monitored.
+9.  Event publication, retry mechanisms, and DLQ are tested and working.
+10. Concurrent transfer scenarios pass load tests without balance inconsistencies.

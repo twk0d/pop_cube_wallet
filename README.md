@@ -23,7 +23,7 @@ The primary goal of this project is to consolidate advanced software engineering
 
 ## 🏗️ Architectural Foundations
 
-The project is built upon four main pillars documented in our [ADRs](./Docs/Arch-log/)
+The project is built upon four main pillars documented in our [ADRs](./docs/arch-log/)
 
 1.  **Domain-Driven Design (DDD):** Strategic mapping of the banking domain into Bounded Contexts.
 2.  **Modular Monolith:** Physical and logical separation of modules using **Spring Modulith**, ensuring low coupling.
@@ -40,8 +40,6 @@ To maintain strict isolation between modules (e.g., `Transaction` and `Notificat
 * **Decoupling:** The `Transaction` module publishes `TransactionCompletedEvent` and doesn't care who consumes it.
 * **Event Publication Registry:** We use Spring Modulith's **Event Publication Registry** to ensure "at-least-once" delivery. If the notification service is down, the event is persisted in the database and retried later.
 * **Asynchronicity:** Notifications are processed in separate threads, ensuring the main transaction flow remains fast and responsive.
-
-
 
 ---
 
@@ -87,3 +85,62 @@ We use **ArchUnit** and **Spring Modulith Test** to ensure architectural integri
 2.  **Clone the repo:** `git clone <repository-url>`
 3.  **Build the project:** `./gradlew build`
 4.  **Run tests:** `./gradlew test`
+
+## 5. Running PostgreSQL
+
+The project uses PostgreSQL. Start it with Docker Compose:
+
+```bash
+docker-compose up -d postgres
+```
+
+This will start PostgreSQL on `localhost:5432` with default credentials configured in `.env`.
+
+## 6. Environment Configuration
+
+Create a `.env` file in the project root (or configure via environment variables):
+
+```env
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pop_cube_wallet
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+```
+
+## 7. Accessing the API
+
+Once the application is running, access the Swagger UI documentation:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON:** http://localhost:8080/v3/api-docs
+
+## 8. API Usage Examples
+
+### Register a new account
+```bash
+curl -X POST http://localhost:8080/api/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "João Silva",
+    "cpf": "12345678900",
+    "email": "joao@example.com"
+  }'
+```
+
+### Query account balance
+```bash
+curl -X GET http://localhost:8080/api/wallets/balance \
+  -H "User-ID: account-uuid-here"
+```
+
+### Execute P2P transfer
+```bash
+curl -X POST http://localhost:8080/api/transactions/transfer \
+  -H "Content-Type: application/json" \
+  -H "User-ID: sender-uuid" \
+  -d '{
+    "deduplicationKey": "unique-key-123",
+    "destinationAccountId": "recipient-uuid",
+    "amount": 100.00
+  }'
+```
