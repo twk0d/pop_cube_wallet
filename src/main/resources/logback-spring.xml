@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="pop-cube-wallet"/>
+
+    <!-- Console appender with structured JSON for production-like environments -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',UTC}","level":"%level","logger":"%logger{36}","traceId":"%mdc{traceId:-N/A}","spanId":"%mdc{spanId:-N/A}","userId":"%mdc{userId:-N/A}","operation":"%mdc{operation:-N/A}","module":"%mdc{module:-N/A}","message":"%msg"}%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Human-readable console for development -->
+    <appender name="DEV_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%mdc{traceId:-}] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Default profile: human-readable -->
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="DEV_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Production profile: JSON structured logging -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <logger name="com.edu.api.pop_cube_wallet" level="INFO"/>
+    <logger name="org.springframework.modulith" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+
+</configuration>
