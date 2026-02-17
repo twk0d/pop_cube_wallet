@@ -41,3 +41,15 @@ The implementation will be guided by the following structure:
 -   **jMolecules Integration:** We will use `@org.jmolecules.architecture.hexagonal.HexagonalArchitecture` annotations to document and enforce these boundaries.
 -   **Strict Separation:** Communication between modules must happen through the Application Layer's API or via Spring Modulith Events, never by direct access to another module's Infrastructure layer.
 -   **Boilerplate:** There will be a slight increase in the number of classes due to the need for Port interfaces and Mapping (via MapStruct) between layers.
+
+---
+
+### **Amendment — 2026-02-20**
+
+The references to **MapStruct** (layer mapping) and **Resilience4j** (secondary adapters) in this ADR reflect the original design intent at the time of writing. Both libraries were subsequently evaluated, found unnecessary for Phase 1, and formally removed.
+
+- **MapStruct** was replaced by manual mapping in persistence adapters, which proved simpler with value objects and static `reconstitute()` factory methods.
+- **Resilience4j** was deferred because all cross-module calls are in-process (no network boundary to protect).
+- **Mapping via manual mappers** and **no circuit breakers** are the current implementation.
+
+See [ADR-0009 — Resilience4j Deferred to Microservice Extraction Phase](0009-resilience4j-deferred.md) for the full decision record and future application points.
